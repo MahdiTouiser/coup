@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -12,35 +12,43 @@ import Box from '@mui/material/Box';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-
-const theme = createTheme({
-  typography: {
-    fontFamily: 'PersianFont',
-  },
-  components: {
-    MuiCssBaseline: {
-      styleOverrides: `
-        @font-face {
-          font-family: 'PersianFont';
-          font-style: normal;
-          font-weight: 400;
-          src: url('/font/Dirooz-FD.ttf') format('truetype');
-          unicodeRange: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF;
-        }
-      `,
-    },
-  },
-});
+import { ThemeProvider } from '@mui/material/styles';
+import { Alert, CircularProgress, Snackbar } from '@mui/material';
+import useApi from '@/hooks/useApi';
+import { BaseResponse, UserPersonalInfo } from '@/models/shared.models';
+import theme from './../../themes/theme';
+import { useAppDispatch, useAppSelector } from '@/hooks/reduxhooks';
+import { useRouter } from 'next/router';
 
 const SignUp = () => {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const [processing, setProcessing] = useState(false);
+  const router = useRouter();
+  const [submitted, setSubmitted] = useState<boolean>(false);
+  const { fetchData } = useApi<BaseResponse<UserPersonalInfo[]>>();
+
+  useEffect(() => {
+    fetchData('SkyDiveEventStatuses', 'get');
+  }, [fetchData]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setProcessing(true);
+    setSubmitted(true);
+
+    fetchData(`/Users/CheckUserExistence`),
+      () => {
+        router.push('/path-to-redirect');
+      };
     const data = new FormData(event.currentTarget);
     console.log({
+      firstName: data.get('firstName'),
+      lastName: data.get('lastName'),
       email: data.get('email'),
       password: data.get('password'),
+      allowExtraEmails: data.get('allowExtraEmails'),
     });
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    setProcessing(false);
   };
 
   return (
@@ -64,7 +72,6 @@ const SignUp = () => {
                 <TextField
                   id='outlined-basic'
                   variant='outlined'
-                  autoComplete='given-name'
                   name='firstName'
                   required
                   fullWidth
@@ -76,7 +83,6 @@ const SignUp = () => {
 
               <Grid item xs={12} sm={6}>
                 <TextField
-                  autoComplete='family-name'
                   required
                   fullWidth
                   id='lastName'
@@ -91,7 +97,6 @@ const SignUp = () => {
                   id='email'
                   label='آدرس ایمیل'
                   name='email'
-                  autoComplete='email'
                 />
               </Grid>
               <Grid item xs={12}>
@@ -102,13 +107,16 @@ const SignUp = () => {
                   label='رمز عبور'
                   type='password'
                   id='password'
-                  autoComplete='new-password'
                 />
               </Grid>
               <Grid item xs={12}>
                 <FormControlLabel
                   control={
-                    <Checkbox value='allowExtraEmails' color='primary' />
+                    <Checkbox
+                      value={Boolean}
+                      color='primary'
+                      name='allowExtraEmails'
+                    />
                   }
                   label='مایل به ساییده شدن مغزم هستم .'
                 />
@@ -120,7 +128,11 @@ const SignUp = () => {
               variant='contained'
               sx={{ mt: 3, mb: 2 }}
             >
-              ثبت نام
+              {processing ? (
+                <CircularProgress size={25} color='inherit' />
+              ) : (
+                <Typography>ثبت نام</Typography>
+              )}
             </Button>
             <Grid container className='flex justify-center'>
               <Grid item>
@@ -131,6 +143,11 @@ const SignUp = () => {
             </Grid>
           </Box>
         </Box>
+        <Snackbar open={processing} autoHideDuration={6000}>
+          <Alert severity='success' sx={{ width: '100%' }}>
+            ورود موفقیت آمیز !
+          </Alert>
+        </Snackbar>
       </Container>
     </ThemeProvider>
   );
