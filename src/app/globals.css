@@ -3,14 +3,14 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'PersianFont';
-  src: url('/font/Dirooz-FD.ttf') format('truetype');
+  src: url("/font/iranyekanwebregular(fanum).ttf");
+    font-family: "IRANYekan";
   font-weight: normal;
   font-style: normal;
 }
 
 body {
-  font-family: 'PersianFont';
+  font-family: 'IRANYekan';
     direction: rtl;
     display: flex;
     margin: 0;
